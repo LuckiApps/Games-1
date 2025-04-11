@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Next-Gen Gaming Hub</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap">
+    <style>
+        :root {
+            --primary: #6C5CE7;
+            --secondary: #00CEC9;
+            --dark: #2D3436;
+            --light: #F5F6FA;
+            --accent: #FD79A8;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            overflow-x: hidden;
+            touch-action: pan-y;
+            transition: background 0.5s ease;
+        }
+        
+        body.dark-mode {
+            background: var(--dark);
+            color: var(--light);
+        }
+        
+        #app {
+            position: relative;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+        
+        /* Header Premium */
+        .header {
+            padding: 25px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 20;
+        }
+        
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .dark-mode .theme-toggle {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        /* Main 3D Scene */
+        #scene-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            margin: 20px 0 40px;
+            overflow: hidden;
+        }
+        
+        canvas {
+            display: block;
+        }
+        
+        /* Game Cards */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 0 20px;
+        }
+        
+        .game-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            aspect-ratio: 9/12;
+        }
+        
+        .dark-mode .game-card {
+            background: #3A4042;
+        }
+        
+        .game-card:active {
+            transform: scale(0.95);
+        }
+        
+        .game-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .game-card .badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--accent);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+        
+        /* Bottom Navigation */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+        
+        .dark-mode .nav-bar {
+            background: #3A4042;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #7F8C8D;
+            text-decoration: none;
+            font-size: 10px;
+        }
+        
+        .dark-mode .nav-item {
+            color: #BDC3C7;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+        }
+        
+        .dark-mode .nav-item.active {
+            color: var(--secondary);
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(108, 92, 231, 0.3);
+            z-index: 90;
+            transition: all 0.3s;
+        }
+        
+        .fab:active {
+            transform: scale(0.9);
+        }
+        
+        /* 3D Touch Effects */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            transform: scale(0);
+            pointer-events: none;
+            animation: ripple 0.6s linear;
+        }
+        
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+        
+        /* Responsive Adjustments */
+        @media (min-width: 768px) {
+            .games-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            }
+            
+            #scene-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <div class="logo">GAMEHUB</div>
+            <div class="theme-toggle" id="themeToggle">
+                <span class="nav-icon">🌓</span>
+            </div>
+        </header>
+        
+        <div id="scene-container"></div>
+        
+        <div class="games-grid">
+            <div class="game-card" data-game="1">
+                <img src="https://via.placeholder.com/300x400/6C5CE7/FFFFFF?text=Game+1" alt="Game 1">
+                <span class="badge">NUEVO</span>
+            </div>
+            <div class="game-card" data-game="2">
+                <img src="https://via.placeholder.com/300x400/FD79A8/FFFFFF?text=Game+2" alt="Game 2">
+            </div>
+            <div class="game-card" data-game="3">
+                <img src="https://via.placeholder.com/300x400/00CEC9/FFFFFF?text=Game+3" alt="Game 3">
+                <span class="badge">POPULAR</span>
+            </div>
+            <div class="game-card" data-game="4">
+                <img src="https://via.placeholder.com/300x400/2D3436/FFFFFF?text=Game+4" alt="Game 4">
+            </div>
+            <div class="game-card" data-game="5">
+                <img src="https://via.placeholder.com/300x400/00B894/FFFFFF?text=Game+5" alt="Game 5">
+            </div>
+            <div class="game-card" data-game="6">
+                <img src="https://via.placeholder.com/300x400/E84393/FFFFFF?text=Game+6" alt="Game 6">
+                <span class="badge">EXCLUSIVO</span>
+            </div>
+        </div>
+        
+        <div class="fab">
+            <span class="nav-icon">🎮</span>
+        </div>
+        
+        <nav class="nav-bar">
+            <a href="#" class="nav-item active">
+                <span class="nav-icon">🏠</span>
+                <span>Inicio</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🔍</span>
+                <span>Explorar</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">❤️</span>
+                <span>Favoritos</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">👤</span>
+                <span>Perfil</span>
+            </a>
+        </nav>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"></script>
+    <script>
+        // Modo oscuro/claro
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            themeToggle.innerHTML = document.body.classList.contains('dark-mode') ? 
+                '<span class="nav-icon">☀️</span>' : '<span class="nav-icon">🌙</span>';
+        });
+        
+        // Efecto ripple táctil
+        document.querySelectorAll('.game-card, .fab, .theme-toggle').forEach(el => {
+            el.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+                ripple.style.left = `${touch.clientX - el.getBoundingClientRect().left}px`;
+                ripple.style.top = `${touch.clientY - el.getBoundingClientRect().top}px`;
+                el.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
+        
+        // Escena 3D optimizada para móvil
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / 300, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, 300);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('scene-container').appendChild(renderer.domElement);
+        
+        // Iluminación premium
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+        
+        // Objeto 3D principal (mejorado para móvil)
+        const geometry = new THREE.IcosahedronGeometry(3, 1);
+        const material = new THREE.MeshPhongMaterial({
+            color: 0x6C5CE7,
+            emissive: 0x000000,
+            specular: 0xFFFFFF,
+            shininess: 50,
+            flatShading: true,
+            transparent: true,
+            opacity: 0.95
+        });
+        
+        const mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+        
+        // Partículas de fondo (optimizadas)
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 200;
+        const posArray = new Float32Array(particlesCount * 3);
+        
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 10;
+        }
+        
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.1,
+            color: 0x00CEC9,
+            transparent: true,
+            opacity: 0.8
+        });
+        
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+        
+        camera.position.z = 8;
+        
+        // Animación suave con GSAP
+        gsap.to(mesh.rotation, {
+            x: Math.PI * 0.25,
+            y: Math.PI * 0.5,
+            duration: 10,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut"
+        });
+        
+        gsap.to(particlesMesh.rotation, {
+            y: Math.PI * 2,
+            duration: 30,
+            repeat: -1,
+            ease: "none"
+        });
+        
+        // Interacción táctil con la escena 3D
+        let touchStartX = 0;
+        let touchStartY = 0;
+        
+        document.getElementById('scene-container').addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        
+        document.getElementById('scene-container').addEventListener('touchmove', (e) => {
+            if(!touchStartX || !touchStartY) return;
+            
+            const touchEndX = e.touches[0].clientX;
+            const touchEndY = e.touches[0].clientY;
+            
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+            
+            mesh.rotation.y += diffX * 0.01;
+            mesh.rotation.x += diffY * 0.01;
+            
+            touchStartX = touchEndX;
+            touchStartY = touchEndY;
+        }, { passive: true });
+        
+        // Render loop optimizado
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+        
+        // Ajuste responsive
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / 300;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, 300);
+        });
+        
+        // Simulación de carga de juegos
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('click', () => {
+                gsap.to(card, {
+                    scale: 0.9,
+                    duration: 0.1,
+                    yoyo: true,
+                    repeat: 1
+                });
+                
+                // Cambiar color del objeto 3D basado en el juego seleccionado
+                const colors = [0x6C5CE7, 0xFD79A8, 0x00CEC9, 0x2D3436, 0x00B894, 0xE84393];
+                const gameId = parseInt(card.getAttribute('data-game')) - 1;
+                
+                gsap.to(mesh.material.color, {
+                    r: (colors[gameId] >> 16 & 255) / 255,
+                    g: (colors[gameId] >> 8 & 255) / 255,
+                    b: (colors[gameId] & 255) / 255,
+                    duration: 0.5
+                });
+            });
+        });
+    </script>
+</body>
+</html>
